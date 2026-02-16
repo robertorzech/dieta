@@ -141,11 +141,14 @@ const MEALS_DB = {
   ]
 };
 
+// Połączona pula posiłków 1 i 3 (zbliżone makro, wymienne wg planu Respo)
+MEALS_DB.posilek1_3 = [...MEALS_DB.posilek1, ...MEALS_DB.posilek3];
+
 const SLOTS = [
-  { key:"posilek1", label:"Posiłek 1", time:"7:00–10:00", icon:"☀️" },
-  { key:"posilek2", label:"Posiłek 2", time:"12:00–15:00", icon:"🍽️" },
-  { key:"posilek3", label:"Posiłek 3", time:"17:00–20:00", icon:"🌙" },
-  { key:"przekaska", label:"Przekąska", time:"dowolna pora", icon:"🍎" }
+  { key:"posilek1", dbKey:"posilek1_3", label:"Posiłek 1", time:"7:00–10:00", icon:"☀️" },
+  { key:"posilek2", dbKey:"posilek2", label:"Posiłek 2", time:"12:00–15:00", icon:"🍽️" },
+  { key:"posilek3", dbKey:"posilek1_3", label:"Posiłek 3", time:"17:00–20:00", icon:"🌙" },
+  { key:"przekaska", dbKey:"przekaska", label:"Przekąska", time:"dowolna pora", icon:"🍎" }
 ];
 
 const DAYS = ["Pon","Wt","Śr","Czw","Pt","Sob","Ndz"];
@@ -185,7 +188,12 @@ function isToday(d) { return d.toDateString() === new Date().toDateString(); }
 
 function getKey(weekId, dayIdx, slot) { return `${weekId}_${dayIdx}_${slot}`; }
 
-function getMeal(slot, id) { return MEALS_DB[slot]?.find(m => m.id === id) || null; }
+function getMeal(slot, id) {
+  // Find the dbKey for this slot
+  const slotDef = SLOTS.find(s => s.key === slot);
+  const dbKey = slotDef ? slotDef.dbKey : slot;
+  return MEALS_DB[dbKey]?.find(m => m.id === id) || null;
+}
 
 function getDayTotals(weekId, dayIdx) {
   let kcal=0, b=0, w=0, t=0, count=0;
@@ -276,7 +284,7 @@ function render() {
 
     if (expanded) {
       html += `<div class="meal-list">`;
-      MEALS_DB[slot.key].forEach(m => {
+      MEALS_DB[slot.dbKey].forEach(m => {
         const isSel = selId === m.id;
         html += `<div class="meal-item${isSel?" selected":""}" onclick="pickMeal('${wid}',${state.selectedDay},'${slot.key}','${m.id}',${isSel})">
           <div class="meal-check${isSel?" checked":""}">${isSel?"✓":""}</div>
